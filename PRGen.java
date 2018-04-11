@@ -54,9 +54,13 @@ public class PRGen extends java.util.Random {
         super(); // Calls the parent class's constructor. 
         bb = ByteBuffer.allocate(4);
         assert key.length == KEY_SIZE_BYTES;
+
         this.seed = key;
         this.hiddenKey = key;
+
         prf = new PRF(key);
+
+        // Creating arrays to help with random integer creation
         oneArray = bb.putInt(1).array();
         bb.clear();
         zeroArray = bb.putInt(0).array();
@@ -67,19 +71,25 @@ public class PRGen extends java.util.Random {
     // higher-order bits should be set to 0.
     protected int next(int bits) {
         assert 0 < bits && bits <= 32;
+
         // Used to shift bits to create appropriately sized int
         int shift = 32 - bits;
+
         // Getting 32 pseudorandom bytes
         byte[] outBytes = prf.eval(zeroArray);
+
         // Creating a 4 byte array and copying to it from the 32 bytes
         byte[] psBytes = new byte[4];
         System.arraycopy(outBytes, 0, psBytes, 0, 4);
+
         // Getting an integer value from the 4-byte array
         bb.put(psBytes);
         int pseudoRandomInt = bb.getInt(0);
         bb.clear();
+
         // Shifting the int right to make it the appropriate size
         pseudoRandomInt = pseudoRandomInt >>> shift;
+
         // Updating the hidden key (to avoid backtracking)
         hiddenKey = prf.eval(oneArray);
         prf = new PRF(hiddenKey);
